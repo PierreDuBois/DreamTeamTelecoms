@@ -31,6 +31,9 @@ public class Client extends Node {
 	static final int DEFAULT_SRC_PORT = 50000;
 	static final int DEFAULT_DST_PORT = 50001;
 	static final String DEFAULT_DST_NODE = "localhost";	
+	boolean ackReceived = true;
+	boolean packetSent = false;
+	private static int indexToSend = 0; //index of name array to send
 	
 	//terminal from tcdlib.jar
 	Terminal terminal; //terminal is Joptionpane dialog box
@@ -58,12 +61,16 @@ public class Client extends Node {
 
 	
 	/**
-	 * Assume that incoming packets contain a String and print the string.
-	 * this is where it receives OK from server. 
+	 * HERE: I am currently assuming that an incoming packet will be a string of format:
+	 * "Kmla Sharma: found at line " + lineNumber
 	 */
 	public synchronized void onReceipt(DatagramPacket packet) 
 	{
-		
+		PacketContent ack = PacketContent.fromDatagramPacket(packet);
+		terminal.println(ack.toString());
+		packetSent = false;
+		ackReceived = true;
+		indexToSend++; //increment to next name to send off
 	}
 
 	
@@ -76,6 +83,21 @@ public class Client extends Node {
 		
 		byte[] data= null;
 		DatagramPacket packet= null;
+		
+		//small list of names to start the searching, they are all in the list, apart from the last name: sarah dgvfg
+		String namesToSearch[] = {"john smith", "david smith", "michael smith","anil kumar", "sarah dgvfg"};
+		while (true)
+		{
+			while(indexToSend < namesToSearch.length && ackReceived == true)
+			{
+				data= (namesToSearch[indexToSend]).getBytes();
+				packet= new DatagramPacket(data, data.length, dstAddress);
+				terminal.println("Sending name: " + namesToSearch[indexToSend] + " to server.");
+				socket.send(packet);
+				packetSent = true;
+				ackReceived = false;
+			}
+		}
 		
 		
 	}
