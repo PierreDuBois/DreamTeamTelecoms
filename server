@@ -49,8 +49,7 @@ public class Server extends Node {
 			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
 				if(recieved.type == SEARCHITEMPACKET )
 				{
-					currentSearch = ((SearchItemPacket)recieved).getSearchItem();
-					this.notifyAll();
+			 
 				}
 				else 
 				{
