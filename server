@@ -1,3 +1,4 @@
+
 package cs.tcd.ie;
 
 import java.net.DatagramPacket;
@@ -18,8 +19,13 @@ import java.io.OutputStreamWriter;
  */
 public class Server extends Node {
 	static final int DEFAULT_PORT = 50001;
-
+	public static final int NODEUPDATEPACKET = 1;
+	public static final int ACKPACKET = 10;
+	public static final int SEARCHITEMPACKET = 100;
 	Terminal terminal;
+	String currentSearch;
+	String[] FileContent;
+	boolean ItemFound;
 	/*
 	 * 
 	 */
@@ -35,11 +41,32 @@ public class Server extends Node {
 
 	/**
 	 * Assume that incoming packets contain a String and print the string.
+	 * Should be able to tell difference between the Client sending a string to search for,
+	 * and a worker node sending an update. 
 	 */
 	public synchronized void onReceipt(DatagramPacket packet) {
 		try {
-			
-				
+			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
+				if(recieved.type == SEARCHITEMPACKET )
+				{
+					currentSearch = ((SearchItemPacket)recieved).getSearchItem();
+					this.notifyAll();
+				}
+				else 
+				{
+					if(((NodeUpdatePacket)recieved).wasFound() == true)
+					{
+						ItemFound = true;
+						int index = ((NodeUpdatePacket)recieved).getIndex();
+						DatagramPacket newpacket = new AckPacketContent(Integer.toString(index)).toDatagramPacket();
+						newpacket.setSocketAddress(packet.getSocketAddress());
+						socket.send(newpacket);
+					}
+					else 
+					{
+						//Implement method to store details of node 
+					}
+				}
 				
 		}
 		catch(Exception e) {e.printStackTrace();}
@@ -51,6 +78,8 @@ public class Server extends Node {
 		organiseFile();
 		terminal.println("Waiting for contact");
 		this.wait();
+		//Create X number of worker nodes, assign each section of FileContent from 1 to x, x to 2X etc.
+		//Have them run
 	}
 	
 	public void organiseFile()
@@ -72,8 +101,10 @@ public class Server extends Node {
 			in= new BufferedReader(new InputStreamReader(fin));
 			
 			counter= 0;
+			FileContent = new String[(int) file.length()];
 			while((fin.available()>0)) {
 				line= in.readLine();
+				FileContent[counter] = line;
 				//System.out.println(counter + ": " + line);
 				if (((counter++)%100)==0) { wait(1000);}
 			}
@@ -83,7 +114,10 @@ public class Server extends Node {
 		}
 		catch(Exception e) {e.printStackTrace();}
 	}
-	
+	public void timer(int time)
+	{
+		//Implement a timer class
+	}
 	
 	public static void main(String[] args) 
 	{
@@ -94,3 +128,4 @@ public class Server extends Node {
 		} catch(java.lang.Exception e) {e.printStackTrace();}
 	}
 }
+
