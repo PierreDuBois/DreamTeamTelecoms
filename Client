@@ -3,6 +3,7 @@ package cs.tcd.ie;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -33,7 +34,6 @@ public class Client extends Node {
 	static final String DEFAULT_DST_NODE = "localhost";	
 	boolean ackReceived = true;
 	boolean packetSent = false;
-	private static int indexToSend = 0; //index of name array to send
 	
 	//terminal from tcdlib.jar
 	Terminal terminal; //terminal is Joptionpane dialog box
@@ -60,17 +60,13 @@ public class Client extends Node {
 	}
 
 	
-	/**
-	 * HERE: I am currently assuming that an incoming packet will be a string of format:
-	 * "Kmla Sharma: found at line " + lineNumber
-	 */
+	
 	public synchronized void onReceipt(DatagramPacket packet) 
 	{
 		PacketContent ack = PacketContent.fromDatagramPacket(packet);
 		terminal.println(ack.toString());
 		packetSent = false;
 		ackReceived = true;
-		indexToSend++; //increment to next name to send off
 	}
 
 	
@@ -81,27 +77,24 @@ public class Client extends Node {
 	public synchronized void start() throws Exception 
 	{
 		
-		byte[] data= null;
 		DatagramPacket packet= null;
-		
-		//small list of names to start the searching, they are all in the list, apart from the last name: sarah dgvfg
-		String namesToSearch[] = {"john smith", "david smith", "michael smith","anil kumar", "sarah dgvfg"};
-		while (true)
+		String name; //read in from user input
+		FileInfoContent filecontent;
+		name = terminal.readString("Name to find: ");
+		if(ackReceived)
 		{
-			while(indexToSend < namesToSearch.length && ackReceived == true)
-			{
-				data= (namesToSearch[indexToSend]).getBytes();
-				packet= new DatagramPacket(data, data.length, dstAddress);
-				terminal.println("Sending name: " + namesToSearch[indexToSend] + " to server.");
-				socket.send(packet);
-				packetSent = true;
-				ackReceived = false;
-			}
+
+			filecontent = new FileInfoContent(name); 
+			packet = filecontent.toDatagramPacket(); //convert fileinfo into a packet
+			packet.setSocketAddress(dstAddress);
+			socket.send(packet);
+			terminal.println("Sent: " + name);
+			packetSent = true;
+			ackReceived = false;
 		}
 		
 		
 	}
-	
 	
 
 
