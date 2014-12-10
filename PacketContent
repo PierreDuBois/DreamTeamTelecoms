@@ -14,9 +14,12 @@ import java.io.ObjectOutputStream;
  */
 public abstract class PacketContent {
 
-	public static final int ACKPACKET = 10;
-	public static final int FILEINFO = 100;
-
+	//each type of our new files
+	public static final int RESULTPACKET= 10;
+	public static final int WORKERPACKET= 20;
+	public static final int HEARTBEAT= 30;
+	public static final int REGISTER= 40;
+	public static final int FILEINFO= 100;
 	int type = 0;
 
 	/**
@@ -40,9 +43,20 @@ public abstract class PacketContent {
 			type= oin.readInt();  // read type from beginning of packet
 
 			switch(type) {   // depending on type create content object 
-			case ACKPACKET:
-				content= new AckPacketContent(oin);
+			case RESULTPACKET:
+				content= new ResultPacket(oin);
 				break;
+//			case WORKERPACKET:
+//				content= new WorkerPacket(oin); //for shane to make!
+//				break;
+			case FILEINFO:
+				content= new FileInfoContent(oin);
+				break;
+//			case HEARTBEAT:
+//				content= new FileInfoContent(oin); //for david to make!
+//				break;
+			case REGISTER:
+				content= new FileInfoContent(oin);
 			default:
 				content= null;
 				break;
