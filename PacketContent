@@ -19,6 +19,7 @@ public abstract class PacketContent {
 	public static final int WORKERPACKET= 20;
 	public static final int HEARTBEAT= 30;
 	public static final int REGISTER= 40;
+	public static final int STOPWORK= 50;
 	public static final int FILEINFO= 100;
 	int type = 0;
 
@@ -53,10 +54,14 @@ public abstract class PacketContent {
 				content= new FileInfoContent(oin);
 				break;
 //			case HEARTBEAT:
-//				content= new FileInfoContent(oin); //for david to make!
+//				content= new Heartbeat(oin); //for david to make!
 //				break;
 			case REGISTER:
-				content= new FileInfoContent(oin);
+				content= new Register(oin);
+				break;
+			case STOPWORK:
+				content= new StopWork(oin);
+				break;
 			default:
 				content= null;
 				break;
