@@ -1,0 +1,144 @@
+package cs.tcd.ie;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+
+import tcdIO.Terminal;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+/*
+ * @author: Kmla Sharma, Shane Moloney and David Hegarty
+ * Student ID: 13319349
+ */
+public class Server extends Node {
+	static final int DEFAULT_PORT = 50001;
+	public static final int NODEUPDATEPACKET = 1;
+	public static final int ACKPACKET = 10;
+	public static final int SEARCHITEMPACKET = 100;
+	Terminal terminal;
+	String currentSearch;
+	String[] FileContent;
+	boolean ItemFound;
+	/*
+	 * 
+	 */
+	Server(Terminal terminal, int port) 
+	{
+		try {
+			this.terminal= terminal;
+			socket= new DatagramSocket(port);
+			listener.go();
+		}
+		catch(java.lang.Exception e) {e.printStackTrace();}
+	}
+
+	/**
+	 * Assume that incoming packets contain a String and print the string.
+	 * Should be able to tell difference between the Client sending a string to search for,
+	 * and a worker node sending an update. 
+	 */
+	public synchronized void onReceipt(DatagramPacket packet) {
+		try {
+			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
+			
+				
+				
+		}
+		catch(Exception e) {e.printStackTrace();}
+	}
+	
+	
+	public synchronized void start() throws Exception 
+	{
+		organiseFile();
+		terminal.println("Waiting for contact");
+		this.wait();
+		//Create X number of worker nodes, assign each section of FileContent from 1 to x, x to 2X etc.
+		//Have them run
+	}
+	
+	public void organiseFile()
+	{
+		String fname= "names-short.txt";
+
+		String line = "";
+		long counter;
+		File file;
+		FileInputStream fin;
+		BufferedReader in;
+		//FileOutputStream fout;
+		FileOutputStream fos = null;
+		File filer;
+		BufferedWriter out;
+
+		try {
+			file= new File(fname);
+			//System.out.println("File length: " + file.length());
+			fin= new FileInputStream(file);
+			in= new BufferedReader(new InputStreamReader(fin));
+			fos = new FileOutputStream("zero.txt");
+			String hello = "hello.txt";
+			
+			String filenames[] = {"zero.txt", "one.txt", "two.txt", "three.txt", "four.txt", "five.txt", "six.txt", 
+					"seven.txt", "eight.txt", "nine.txt"};
+			
+			counter= 0;
+			byte[] section;
+			line= in.readLine() + "\n";
+			while((line != null))
+			{
+//				for(int i=0; i<filenames.length; i++)
+//				{
+					
+					while(counter < 100 && ((line != null)))
+					{
+						section = line.getBytes();
+						System.out.println(counter + " : " + line);
+						fos.write(section);
+						counter++;
+						line= in.readLine() + "\n";
+					}
+					//counter=0;
+				//}
+				
+				
+				
+				//now send this file to worker node
+				//resume loop
+				//counter=0;
+				
+				//System.out.println(counter + ": " + line);
+				//if (((counter++)%100)==0) { wait(1000);}
+				
+//				
+				
+			}
+			//System.out.println("hola");
+			in.close();
+			fin.close();
+			fos.flush();
+			
+		}
+		catch(Exception e) {e.printStackTrace();}
+		
+	}
+	public void timer(int time)
+	{
+		//Implement a timer class
+	}
+	
+	public static void main(String[] args) 
+	{
+		try {					
+			Terminal terminal= new Terminal("Server");
+			(new Server(terminal, DEFAULT_PORT)).start();
+			terminal.println("Program completed");
+		} catch(java.lang.Exception e) {e.printStackTrace();}
+	}
+}
