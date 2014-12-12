@@ -47,9 +47,9 @@ public abstract class PacketContent {
 			case RESULTPACKET:
 				content= new ResultPacket(oin);
 				break;
-//			case WORKERPACKET:
-//				content= new WorkerPacket(oin); //for shane to make!
-//				break;
+			case WORKERPACKET:
+				content= new WorkerPacket(oin); //for shane to make!
+				break;
 			case FILEINFO:
 				content= new FileInfoContent(oin);
 				break;
