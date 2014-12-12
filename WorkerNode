@@ -1,87 +1,123 @@
 package cs.tcd.ie;
 
-import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.net.InetSocketAddress;
 
-import tcdIO.*;
-
-/**
- *
- * Client class
- * 
- * 
- * An instance accepts user input 
- *
- */
-
-/*
- * @author: Kmla Sharma
- * Student ID: 13319349
- */
+import tcdIO.Terminal;
 
 public class WorkerNode extends Node {
-	static final int DEFAULT_SRC_PORT = 50002;
-	static final int DEFAULT_DST_PORT = 50001;
-	static final String DEFAULT_DST_NODE = "localhost";	
+	static final int DST_PORT = 50001;
+	static final String DEFAULT_DST_NODE = "worker";
 	
-	//terminal from tcdlib.jar
-	Terminal terminal; //terminal is Joptionpane dialog box
+	int portNum;
+	String[] list;
+	String search;
+	int entriesProcessed;
+	long startTime;
+	boolean running;
+	Timer heartbeat;
 	InetSocketAddress dstAddress;
-	
-	/**
-	 * Constructor
-	 * 	 
-	 * Attempts to create socket at given port and create an InetSocketAddress for the destinations
-	 * Socket is one endpoint of a 2 way communication link, TCP layer
+	/*
+	 * @author: Shane Moloney
 	 */
-	WorkerNode(Terminal terminal, String dstHost, int dstPort, int srcPort) {
+	WorkerNode(String dstHost, int dstPort, int srcPort) {
 		try {
-			this.terminal= terminal;
-			dstAddress= new InetSocketAddress(dstHost, dstPort);
-			socket= new DatagramSocket(srcPort);
+			dstAddress = new InetSocketAddress(dstHost, dstPort);
+			socket = new DatagramSocket(srcPort);
 			listener.go();
-			
-		}
-		catch(java.lang.Exception e) 
-		{
+		} catch (java.lang.Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	
 	/**
-	 * Assume that incoming packets contain a String and print the string.
-	 * this is where it receives OK from server. 
+	 * Receives WorkerPacket and sets local variables appropriately.
 	 */
 	public synchronized void onReceipt(DatagramPacket packet) 
 	{
-		
+		try {
+			
+			PacketContent content = PacketContent.fromDatagramPacket(packet);
+			if(content.getType() == PacketContent.WORKERPACKET)
+			{
+				list = ((WorkerPacket)content).getData();
+				search = ((WorkerPacket)content).toString();
+				this.notify();
+			}
+			else if(content.getType() == PacketContent.STOPWORK)
+				running = ((StopWork)content).stopWork();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
-
+	
 	
 	/**
-	 * Sender Method
-	 * 
+	 * Sends the registration packet and begins heartbeat timer.
 	 */
-	public synchronized void start() throws Exception 
+	public void register()
 	{
-		
-		byte[] data= null;
-		DatagramPacket packet= null;
+		DatagramPacket r = new Register(true).toDatagramPacket();
+		r.setSocketAddress(dstAddress);
+		try {
+			socket.send(r);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		heartbeat = new Timer();
+		heartbeat.schedule(new TimerTask()
+		{
+		@Override
+		public void run()
+		{
+			DatagramPacket heartbeat = new Heartbeat(true).toDatagramPacket();
+			heartbeat.setSocketAddress(dstAddress);
+			socket.send(heartbeat);
+		}
+		}, 1500, 1500);
 	}
 
+	public synchronized void start() throws Exception 
+	{
+		register();
+		while(running)
+		{
+			startTime = System.nanoTime();
+			entriesProcessed = 0;
+			for(int i = 0; i < list.length; i++)
+			{
+				if(list[i].equals(search))
+				{
+					DatagramPacket result = 
+							new ResultPacket(i, System.nanoTime()-startTime, list.length).toDatagramPacket();
+					result.setSocketAddress(dstAddress);
+					socket.send(result);
+					break;
+				}
+				entriesProcessed++;
+			}
+			register();
+			this.wait();
+		}
+		
+		
+	}
 
-	/**
-	 * Test method
+	/*
 	 * 
-	 * Sends a packet to a given address
 	 */
 	public static void main(String[] args) {
-		try {					
-			Terminal terminal= new Terminal("Client");		
-			(new Client(terminal, DEFAULT_DST_NODE, DEFAULT_DST_PORT, DEFAULT_SRC_PORT)).start();
-			terminal.println("Program completed");
-		} catch(java.lang.Exception e) {e.printStackTrace();}
+		try {
+			WorkerNode first = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,
+					2);
+			first.start();
+		} catch (java.lang.Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
