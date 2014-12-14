@@ -7,15 +7,17 @@ import java.io.ObjectOutputStream;
 public class Register extends PacketContent {
 	
 	boolean status;
+	int nodeID;
 	/**
 	 * 
 	 * @param status: contains info on whether or not the worker node is ready for work. True = it is, false it isnt
 
 	 */
-	Register(boolean status) 
+	Register(boolean status, int id) 
 	{
 		type= REGISTER;
 		this.status = status;
+		nodeID = id;
 	}
 
 	/**
@@ -27,6 +29,7 @@ public class Register extends PacketContent {
 		{
 			type= REGISTER;
 			status= oin.readBoolean();
+			nodeID = oin.readInt();
 		} 
 		catch(Exception e) {e.printStackTrace();}
 	}
@@ -38,6 +41,7 @@ public class Register extends PacketContent {
 	protected void toObjectOutputStream(ObjectOutputStream oout) {
 		try {
 			oout.writeBoolean(status);
+			oout.writeInt(nodeID);
 		}
 		catch(Exception e) {e.printStackTrace();}
 	}
@@ -60,5 +64,10 @@ public class Register extends PacketContent {
 	public boolean isReady()
 	{
 		return status;
+	}
+	
+	public int nodeNumber()
+	{
+		return nodeID;
 	}
 }
