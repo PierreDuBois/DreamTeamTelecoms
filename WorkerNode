@@ -2,34 +2,34 @@ package cs.tcd.ie;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.net.InetSocketAddress;
 
-import tcdIO.Terminal;
 
 public class WorkerNode extends Node {
 	static final int DST_PORT = 50001;
-	static final String DEFAULT_DST_NODE = "worker";
+	static final int SRC_PORT = 60000;
+	static final String DEFAULT_DST_NODE = "localhost";
 	
 	int portNum;
 	String[] list;
 	String search;
-	int entriesProcessed;
+	int entriesProcessed, sectionsProcessed, workerID;
 	long startTime;
 	boolean running;
-	Timer heartbeat;
+	Timer heartbeat, registration;
 	InetSocketAddress dstAddress;
 	/*
 	 * @author: Shane Moloney
 	 */
-	WorkerNode(String dstHost, int dstPort, int srcPort) {
+	WorkerNode(String dstHost, int dstPort, int srcPort, int id) {
 		try {
 			dstAddress = new InetSocketAddress(dstHost, dstPort);
 			socket = new DatagramSocket(srcPort);
 			listener.go();
+			workerID = id;
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
 		}
@@ -47,10 +47,15 @@ public class WorkerNode extends Node {
 			{
 				list = ((WorkerPacket)content).getData();
 				search = ((WorkerPacket)content).toString();
+				heartbeat.cancel();
+				heartbeat.purge();
 				this.notify();
 			}
 			else if(content.getType() == PacketContent.STOPWORK)
+			{
 				running = ((StopWork)content).stopWork();
+				this.notify();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,7 +67,7 @@ public class WorkerNode extends Node {
 	 */
 	public void register()
 	{
-		DatagramPacket r = new Register(true).toDatagramPacket();
+		DatagramPacket r = new Register(true, workerID).toDatagramPacket();
 		r.setSocketAddress(dstAddress);
 		try {
 			socket.send(r);
@@ -75,11 +80,31 @@ public class WorkerNode extends Node {
 		@Override
 		public void run()
 		{
-			DatagramPacket heartbeat = new Heartbeat(true).toDatagramPacket();
+			DatagramPacket heartbeat = new Heartbeat(true, entriesProcessed, sectionsProcessed, workerID).toDatagramPacket();
 			heartbeat.setSocketAddress(dstAddress);
-			socket.send(heartbeat);
+			try {
+				socket.send(heartbeat);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		}, 1500, 1500);
+
+		registration = new Timer();
+		registration.schedule(new TimerTask()
+		{
+		@Override
+		public void run()
+		{
+			DatagramPacket r = new Register(true, workerID).toDatagramPacket();
+			r.setSocketAddress(dstAddress);
+			try {
+				socket.send(r);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		}, 1000, 1000);
 	}
 
 	public synchronized void start() throws Exception 
@@ -101,6 +126,9 @@ public class WorkerNode extends Node {
 				}
 				entriesProcessed++;
 			}
+			sectionsProcessed++;
+			heartbeat.cancel();
+			heartbeat.purge();
 			register();
 			this.wait();
 		}
@@ -113,11 +141,16 @@ public class WorkerNode extends Node {
 	 */
 	public static void main(String[] args) {
 		try {
-			WorkerNode first = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,
-					2);
-			first.start();
+			WorkerNode WorkerNodes[] = new WorkerNode[10];
+
+			for(int i = 0; i < 5; i ++)
+			{
+				WorkerNodes[i] = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT + i, i);
+				WorkerNodes[i].start();
+			}
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
 		}
 	}
 }
+
