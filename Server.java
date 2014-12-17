@@ -151,49 +151,35 @@ public class Server extends Node {
 	{
 		String fname= "names-short.txt";
 
-		String line = "";
+		String line = " ";
 		long counter;
 		File file;
 		FileInputStream fin;
 		BufferedReader in;
-		//FileOutputStream fout;
-		FileOutputStream fos = null;
 
 		try {
 			file= new File(fname);
 			fin= new FileInputStream(file);
 			in= new BufferedReader(new InputStreamReader(fin));
-			fos = new FileOutputStream("zero.txt");
 			FileContents = new String[20][DIVISION];
 			counter= 0;
-			byte[] section;
-			line= in.readLine();
 			int array = 0;
-			while((line != null))
+			Stats = new int[5][2];
+			while(line != null)
 			{
 				int index = 0;
 				counter=0;
-				while(counter < DIVISION && ((line != null)))
+				while(counter < DIVISION && line != null)
 				{
-					section = line.getBytes();
-					//System.out.println(counter + " : " + line);
-					fos.write(section);
-					counter++;
 					line= in.readLine();
 					FileContents[array][index] =line;
-//					if(index >= DIVISION)
-//					{
-//						index = 0;					//Move to next section when one is full
-//						array ++;
-//					}
-					index ++;
+					index++;
+					counter++;
 				}
-				Stats = new int[10][2];		
-				
+				array++;
 			}
 			in.close();
 			fin.close();
-			fos.flush();
 
 		}
 		catch(Exception e) {e.printStackTrace();}
@@ -202,7 +188,7 @@ public class Server extends Node {
 	public void sendWork(SocketAddress current, String[] Section) throws IOException
 	{
 		WorkerPacket Search = new WorkerPacket(Section,currentSearch);
-		terminal.println("" + currentSearch + ", " + Section[0] + ", " + Section[1]);
+		terminal.println("" + currentSearch + ", " + Section[0] + ", " + Section[Section.length -1]);
 		DatagramPacket packet = Search.toDatagramPacket();
 		packet.setSocketAddress(current);
 		socket.send(packet);
