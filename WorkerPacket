@@ -21,6 +21,8 @@ public class WorkerPacket extends PacketContent {
 	protected WorkerPacket(ObjectInputStream oin) {
 		try {
 			type= WORKERPACKET;
+			int length = oin.readInt();
+			input = new String[length];
 			search = oin.readUTF();
 			for(int i = 0; i < input.length; i++)
 			{
@@ -36,7 +38,8 @@ public class WorkerPacket extends PacketContent {
 	 */
 	protected void toObjectOutputStream(ObjectOutputStream oout) {
 		try {
-			oout.writeBytes(search);
+			oout.writeInt(input.length);
+			oout.writeUTF(search);
 			for(int i = 0; i < input.length; i++)
 			{
 				oout.writeUTF(input[i]);
