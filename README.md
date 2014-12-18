@@ -16,8 +16,11 @@ REPORT
 ===============
 Headings:
 1. Introduction
+
 2. High Level Description of main classes - (Worker node, server, client, register, worker packet, heartbeat, result packet)  
+
 3. Implementation of program - Small finicky things you need to know about our program (WRITE IN A DIFFERENT WAY YOU WOULD WRITE HIGH LEVEL): fileinfocontent, heartbeat tracker, stop work
+
 4. Reflections & Conclusion (include advantages & disadvantages etc)
 
 
