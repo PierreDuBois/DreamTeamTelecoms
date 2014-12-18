@@ -53,9 +53,9 @@ public abstract class PacketContent {
 			case FILEINFO:
 				content= new FileInfoContent(oin);
 				break;
-//			case HEARTBEAT:
-//				content= new Heartbeat(oin); //for david to make!
-//				break;
+			case HEARTBEAT:
+				content= new Heartbeat(oin); //for david to make!
+				break;
 			case REGISTER:
 				content= new Register(oin);
 				break;
