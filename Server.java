@@ -8,7 +8,6 @@ import tcdIO.Terminal;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
@@ -21,23 +20,16 @@ public class Server extends Node {
 	static final int DEFAULT_SRC_PORT = 50000;
 	static final int DEFAULT_DST_PORT = 50001;
 	static final int HEART_TIMEOUT = 3000;
-	static final String DEFAULT_DST_NODE = "localhost";	
-	public static final int NODEUPDATEPACKET = 1;
-	public static final int RESULTPACKET= 10;
-	public static final int WORKERPACKET= 20;
-	public static final int HEARTBEAT= 30;
-	public static final int REGISTER= 40;
-	public static final int STOPWORK= 50;
-	public static final int FILEINFO= 100;
-	public static final int DATABASE_SIZE = 5000;
-	public static final int DIVISION = DATABASE_SIZE / 20;
+	static final String DEFAULT_DST_NODE = "localhost";
+	public static final int DATABASE_SIZE = 10000;
+	public static final int DIVISION = (DATABASE_SIZE / 20);
 	Terminal terminal;
 	boolean startWork = false;
 	String currentSearch;// The name currrently beign searched for.
 	boolean ItemFound;		//Boolean marking whether or not the searchitem was found
 	String[][] FileContents; // Array of the array of strings to send to the nodes
 	boolean[] sent = new boolean[20];
-	InetSocketAddress dstAddress =  new InetSocketAddress(DEFAULT_DST_NODE, DEFAULT_DST_PORT);
+	InetSocketAddress dstAddress =  new InetSocketAddress(DEFAULT_DST_NODE, DEFAULT_SRC_PORT);
 	boolean [] Running = new boolean[5];//Array of booleans that are set to True and are set to FAlse
 	//whenever a hearbeat returns saying a node is not running, or a heartbeat fails to be sent
 	//Twice in a row.
@@ -68,14 +60,13 @@ public class Server extends Node {
 	public synchronized void onReceipt(DatagramPacket packet) {
 		try {
 			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
-			if(recieved.type == FILEINFO )
+			if(recieved.type == PacketContent.FILEINFO )
 			{
 				FileInfoContent contents = ((FileInfoContent)recieved);
 				currentSearch = contents.information;
 				startWork = true;
-				this.notifyAll();
 			}
-			else if(recieved.type == HEARTBEAT)
+			else if(recieved.type == PacketContent.HEARTBEAT)
 			{
 				int node = ((Heartbeat)recieved).number();
 				Running[node] = true;
@@ -86,11 +77,12 @@ public class Server extends Node {
 				heartbeats[node].resetTimer();
 				heartbeats[node].timerTask();
 			}
-			else if(recieved.type == REGISTER)
+			else if(recieved.type == PacketContent.REGISTER)
 			{
 				int node = ((Register)recieved).nodeNumber();
 				if(NextSection < 20 && startWork)
 				{
+					getNextSection();
 					sendWork(packet.getSocketAddress(), FileContents[NextSection]);
 					heartbeats[node].clearTimer();
 					heartbeats[node].resetTimer();
@@ -99,17 +91,19 @@ public class Server extends Node {
 				}
 				Running[node] = true;
 			}
-			else if(recieved.type == RESULTPACKET)
+			else if(recieved.type == PacketContent.RESULTPACKET)
 			{
-				//Not Entirely sure what address should be sending each packet to
+				startWork = false;
 				DatagramPacket stop = new StopWork(false).toDatagramPacket();
 				for(int i = 0; i < 5; i ++)
 				{
 					stop.setSocketAddress(packet.getSocketAddress());
 					socket.send(stop);
 				}
-				packet.setSocketAddress(dstAddress); //Should send the packet to Client
-				socket.send(packet);
+					String result = "Line found at " + (((ResultPacket)recieved).getLineNumber() * heartbeats[((ResultPacket)recieved).getID()].getSection()) + ".";
+					DatagramPacket clientPacket = new FileInfoContent(result).toDatagramPacket();
+					clientPacket.setSocketAddress(dstAddress); //Should send the packet to Client
+					socket.send(clientPacket);
 			}
 		}
 		catch(Exception e) {e.printStackTrace();}
@@ -129,7 +123,9 @@ public class Server extends Node {
 			if(!sent[i])
 			{
 				NextSection = i;
+				terminal.println("" + i);
 				sent[i] = true;
+				return;
 			}
 		}
 		NextSection = 20;
@@ -144,7 +140,6 @@ public class Server extends Node {
 		organiseFile();
 		terminal.println("Waiting for contact");
 		this.wait();
-
 	}
 
 	public void organiseFile()
@@ -165,7 +160,7 @@ public class Server extends Node {
 			counter= 0;
 			int array = 0;
 			Stats = new int[5][2];
-			while(line != null)
+			while(line != null && array < 20)
 			{
 				int index = 0;
 				counter=0;
@@ -180,7 +175,6 @@ public class Server extends Node {
 			}
 			in.close();
 			fin.close();
-
 		}
 		catch(Exception e) {e.printStackTrace();}
 
@@ -188,7 +182,7 @@ public class Server extends Node {
 	public void sendWork(SocketAddress current, String[] Section) throws IOException
 	{
 		WorkerPacket Search = new WorkerPacket(Section,currentSearch);
-		terminal.println("" + currentSearch + ", " + Section[0] + ", " + Section[Section.length -1]);
+		terminal.println("" + currentSearch + ", " + Section[Section.length -2] + ", " + Section[Section.length -1]);
 		DatagramPacket packet = Search.toDatagramPacket();
 		packet.setSocketAddress(current);
 		socket.send(packet);
