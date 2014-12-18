@@ -10,3 +10,10 @@ DreamTeamTelecoms
 creating multiple workers or if he wants us to create one and he'll open it on multiple different computers)
 
 - we have to work out why the line number is wrong on the names
+
+
+-- REPORT -- 
+We will all write an individual section on this section once all code is perfect, include pseudo code, and send to me .
+- David: Most aspects of server / Heartbeat / 
+- Shane: Some aspects of server / Worker node /  Worker packet / Heartbeat tracker
+- Kmla: Client / FileInfoContent / Register / Result Packet / Stop Work
