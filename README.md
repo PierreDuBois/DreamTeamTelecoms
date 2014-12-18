@@ -15,6 +15,7 @@ creating multiple workers or if he wants us to create one and he'll open it on m
 REPORT
 ===============
 Headings:
+
 1. Introduction
 
 2. High Level Description of main classes - (Worker node, server, client, register, worker packet, heartbeat, result packet)  
