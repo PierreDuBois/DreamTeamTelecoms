@@ -18,7 +18,7 @@ public class WorkerNode extends Node {
 	String search;
 	int entriesProcessed, sectionsProcessed, workerID;
 	long startTime;
-	boolean running;
+	boolean running = true;
 	Timer heartbeat, registration;
 	InetSocketAddress dstAddress;
 	/*
@@ -41,7 +41,6 @@ public class WorkerNode extends Node {
 	public synchronized void onReceipt(DatagramPacket packet) 
 	{
 		try {
-			
 			PacketContent content = PacketContent.fromDatagramPacket(packet);
 			if(content.getType() == PacketContent.WORKERPACKET)
 			{
@@ -49,13 +48,14 @@ public class WorkerNode extends Node {
 				search = ((WorkerPacket)content).toString();
 				heartbeat.cancel();
 				heartbeat.purge();
-				this.notify();
+				registration.cancel();
+				registration.purge();
 			}
 			else if(content.getType() == PacketContent.STOPWORK)
 			{
 				running = ((StopWork)content).stopWork();
-				this.notify();
 			}
+			this.notify();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -110,6 +110,8 @@ public class WorkerNode extends Node {
 	public synchronized void start() throws Exception 
 	{
 		register();
+		list = new String[1];
+		list[0] = "0";
 		while(running)
 		{
 			startTime = System.nanoTime();
@@ -118,8 +120,7 @@ public class WorkerNode extends Node {
 			{
 				if(list[i].equals(search))
 				{
-					DatagramPacket result = 
-							new ResultPacket(i, System.nanoTime()-startTime, list.length).toDatagramPacket();
+					DatagramPacket result = new ResultPacket(i, System.nanoTime()-startTime, list.length, workerID).toDatagramPacket();
 					result.setSocketAddress(dstAddress);
 					socket.send(result);
 					break;
@@ -131,8 +132,10 @@ public class WorkerNode extends Node {
 			heartbeat.purge();
 			register();
 			this.wait();
+			
 		}
-		
+		registration.cancel();
+		registration.purge();
 		
 	}
 
