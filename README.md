@@ -1,8 +1,8 @@
 DreamTeamTelecoms
 =================
-- we have to have more terminal.printlns in server for when registration of nodes are received and when heartbeats are received
+- we have to have more terminal.printlns in server for when registration of nodes are received and when heartbeats are received - Kmla wants to do this.
 
-- we have to comment code and make it pretty
+- we have to comment each of our own code and make it pretty
 
 - we have to account for the name not being found
 
