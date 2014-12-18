@@ -25,7 +25,8 @@ Headings:
 4. Reflections & Conclusion (include advantages & disadvantages etc)
 
 
-We will all write an individual section on this section once all code is perfect, include pseudo code, and send to me .
+Write your section and submit to kmlaaaa. Please include snippets of PSEUDO CODE :D
+
 - David: Introduction / 95% of server (High level description) / Heartbeat (High level description) / Reflection & Conclusion
 
 - Shane: 5% of server / Worker node (High level description)/  Worker packet(High level description) / Heartbeat tracker (Implementation level)
