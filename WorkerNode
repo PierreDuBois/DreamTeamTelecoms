@@ -53,6 +53,10 @@ public class WorkerNode extends Node {
 			}
 			else if(content.getType() == PacketContent.STOPWORK)
 			{
+				registration.cancel();
+				registration.purge();
+				heartbeat.cancel();
+				heartbeat.purge();
 				running = ((StopWork)content).stopWork();
 			}
 			this.notify();
@@ -88,7 +92,7 @@ public class WorkerNode extends Node {
 				e.printStackTrace();
 			}
 		}
-		}, 1500, 1500);
+		}, 2500, 2500);
 
 		registration = new Timer();
 		registration.schedule(new TimerTask()
@@ -130,13 +134,12 @@ public class WorkerNode extends Node {
 			sectionsProcessed++;
 			heartbeat.cancel();
 			heartbeat.purge();
+			registration.cancel();
+			registration.purge();
 			register();
 			this.wait();
 			
 		}
-		registration.cancel();
-		registration.purge();
-		
 	}
 
 	/*
@@ -144,9 +147,9 @@ public class WorkerNode extends Node {
 	 */
 	public static void main(String[] args) {
 		try {
-			WorkerNode WorkerNodes[] = new WorkerNode[10];
+			WorkerNode WorkerNodes[] = new WorkerNode[3];
 
-			for(int i = 0; i < 5; i ++)
+			for(int i = 0; i < WorkerNodes.length; i ++)
 			{
 				WorkerNodes[i] = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT + i, i);
 				WorkerNodes[i].start();
@@ -156,4 +159,3 @@ public class WorkerNode extends Node {
 		}
 	}
 }
-
