@@ -61,9 +61,9 @@ public class Server extends Node {
 	public synchronized void onReceipt(DatagramPacket packet) {
 		try {
 			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
-			if(recieved.type == PacketContent.FILEINFO )
+			if(recieved.type == PacketContent.CLIENTNAME )
 			{
-				FileInfoContent contents = ((FileInfoContent)recieved);
+				SendName contents = ((SendName)recieved);
 				currentSearch = contents.information;
 				startWork = true;
 			}
@@ -137,7 +137,7 @@ public class Server extends Node {
 				result = "Name was found at line " + (((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
 			else
 				result = "Name not found.";
-			DatagramPacket clientPacket = new FileInfoContent(result).toDatagramPacket();
+			DatagramPacket clientPacket = new SendName(result).toDatagramPacket();
 			clientPacket.setSocketAddress(dstAddress); //Should send the packet to Client
 			socket.send(clientPacket);
 			NextSection = 20;
@@ -219,6 +219,7 @@ public class Server extends Node {
 	public void sendWork(SocketAddress current, String[] Section) throws IOException
 	{
 		WorkerPacket Search = new WorkerPacket(Section,currentSearch);
+		//terminal.println("" + currentSearch + ", " + Section[Section.length -2] + ", " + Section[Section.length -1]);
 		DatagramPacket packet = Search.toDatagramPacket();
 		packet.setSocketAddress(current);
 		socket.send(packet);
