@@ -66,10 +66,10 @@ public class Client extends Node {
 		
 		DatagramPacket packet= null;
 		String name; //read in from user input
-		FileInfoContent filecontent;
+		SendName packetToSend;
 		name = terminal.readString("Name to find: ");
-		filecontent = new FileInfoContent(name); 
-		packet = filecontent.toDatagramPacket(); //convert fileinfo into a packet
+		packetToSend = new SendName(name); 
+		packet = packetToSend.toDatagramPacket(); //convert fileinfo into a packet
 		packet.setSocketAddress(dstAddress);
 		socket.send(packet);
 		terminal.println("Sent: " + name);
