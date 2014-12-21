@@ -13,8 +13,9 @@ creating multiple workers or if he wants us to create one and he'll open it on m
 - we have to work out why the line number is wrong on the names
 
 
-REPORT
+REPORT (UPDATED!)
 ===============
+To make it easy on me, kmleh, would you guys please upload your sections in the report as you would a class of code? So call it after your name, and paste in your documentation into where code would usually go. THANKS.
 Headings:
 
 1. Introduction
