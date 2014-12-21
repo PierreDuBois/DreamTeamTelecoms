@@ -20,7 +20,7 @@ public abstract class PacketContent {
 	public static final int HEARTBEAT= 30;
 	public static final int REGISTER= 40;
 	public static final int STOPWORK= 50;
-	public static final int FILEINFO= 100;
+	public static final int CLIENTNAME= 100;
 	int type = 0;
 
 	/**
@@ -50,8 +50,8 @@ public abstract class PacketContent {
 			case WORKERPACKET:
 				content= new WorkerPacket(oin); //for shane to make!
 				break;
-			case FILEINFO:
-				content= new FileInfoContent(oin);
+			case CLIENTNAME:
+				content= new SendName(oin);
 				break;
 			case HEARTBEAT:
 				content= new Heartbeat(oin); //for david to make!
