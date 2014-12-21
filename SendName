@@ -8,7 +8,7 @@ import java.io.ObjectOutputStream;
  * @author Kmla Sharma
  * 
  */
-public class FileInfoContent extends PacketContent {
+public class SendName extends PacketContent {
 	
 	String information;
 	
@@ -17,9 +17,9 @@ public class FileInfoContent extends PacketContent {
 	 * @param information: may contain name or whether or not the server found the name (if so, state index of name)
 	 *
 	 */
-	FileInfoContent(String information) 
+	SendName(String information) 
 	{
-		type= FILEINFO;
+		type= CLIENTNAME;
 		this.information = information;
 	}
 
@@ -27,10 +27,11 @@ public class FileInfoContent extends PacketContent {
 	 * Constructs an object out of a datagram packet.
 	 * @param packet Packet that contains information about a file.
 	 */
-	protected FileInfoContent(ObjectInputStream oin) {
+	protected SendName(ObjectInputStream oin) 
+	{
 		try 
 		{
-			type= FILEINFO;
+			type = CLIENTNAME;
 			information= oin.readUTF();
 		} 
 		catch(Exception e) {e.printStackTrace();}
