@@ -60,6 +60,7 @@ public class WorkerNode extends Node {
 				heartbeat.purge();
 				running = ((StopWork)content).stopWork();
 			}
+			//System.out.println(content.type);
 			this.notify();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -128,6 +129,7 @@ public class WorkerNode extends Node {
 					DatagramPacket result = new ResultPacket(i, System.nanoTime()-startTime, list.length, workerID).toDatagramPacket();
 					result.setSocketAddress(dstAddress);
 					socket.send(result);
+					System.out.println("hi");
 					break;
 				}
 				entriesProcessed++;
@@ -137,7 +139,6 @@ public class WorkerNode extends Node {
 			heartbeat.purge();
 			registration.cancel();
 			registration.purge();
-			System.out.println("hi");
 			register();
 			this.wait();
 		}
@@ -146,8 +147,7 @@ public class WorkerNode extends Node {
 	
 	public static void main(String[] args) {
 		try {
-			String id = JOptionPane.showInputDialog(null, "Please enter worker ID.");
-			int intID = Integer.parseInt(id);
+			int intID;
 			WorkerNode Worker = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT, 0);
 			Worker.start();
 		} catch (java.lang.Exception e) {
