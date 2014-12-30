@@ -39,6 +39,7 @@ public class Server extends Node {
 	//names searched through and the sections of the code processed e.g. Stats[5][0] stores the 
 	// number of names searched through for Node 5, with Stat[5][1] being the sections.
 	int NextSection;
+	long timeTaken;
 	DatagramPacket address[] = new DatagramPacket[5];
 	/*
 	 * 
@@ -58,7 +59,8 @@ public class Server extends Node {
 	 * Should be able to tell difference between the Client sending a string to search for,
 	 * and a worker node sending an update. 
 	 */
-	public synchronized void onReceipt(DatagramPacket packet) {
+	public synchronized void onReceipt(DatagramPacket packet)
+	{
 		try {
 			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
 			if(recieved.type == PacketContent.CLIENTNAME )
@@ -70,7 +72,6 @@ public class Server extends Node {
 			else if(recieved.type == PacketContent.HEARTBEAT)
 			{
 				int node = ((Heartbeat)recieved).number();
-				terminal.println("Heartbeat received from worker: " + node);
 				Running[node] = true;
 				int index = ((Heartbeat)recieved).index();
 				Stats[node][0] = Stats[node][0]  + index;
@@ -78,16 +79,20 @@ public class Server extends Node {
 				heartbeats[node].clearTimer();
 				heartbeats[node].resetTimer();
 				heartbeats[node].timerTask();
+				terminal.println("Node " + node + " has processed " + ((Heartbeat)recieved).sections() + " sections, and is on line " + 
+								((Heartbeat)recieved).index() + " of it's current section.");
 			}
 			else if(recieved.type == PacketContent.REGISTER)
 			{
 				int node = ((Register)recieved).nodeNumber();
-				terminal.println("Worker " + node + " is ready to work!");
+				//terminal.println("Worker " + node + " is ready to work!");
 				isMissing(packet, node);
 				if(NextSection < 20 && startWork)
 				{
 					getNextSection();
+					timeTaken += ((Register)recieved).time();
 					sendWork(packet.getSocketAddress(), FileContents[NextSection]);
+					terminal.println("" + node);
 					heartbeats[node].clearTimer();
 					heartbeats[node].resetTimer();
 					heartbeats[node].timerTask();
@@ -99,7 +104,7 @@ public class Server extends Node {
 			}
 			else if(recieved.type == PacketContent.RESULTPACKET)
 			{
-				int node = ((Register)recieved).nodeNumber();
+				int node = ((ResultPacket)recieved).getID();
 				endWork(packet, node);
 			}
 		}
@@ -109,18 +114,23 @@ public class Server extends Node {
 	public void isMissing(DatagramPacket packet, int nodeNumber)
 	{
 		int count = 0;
-		for(int i = 0; i < sent.length; i++)
+		for(int i = 0; i < sent[0].length; i++)
 		{
 			if(sent[0][i] && sent[1][i])
 				count++;
 		}
-		if(count == sent.length)
+		terminal.println("" + count);
+		if(count == sent[0].length)
+		{
+			terminal.print("hi");
 			endWork(packet, nodeNumber);
+		}
 	}
 	
 	public void endWork(DatagramPacket packet, int nodeNumber)
 	{
 		try {
+			System.out.println("yo");
 			startWork = false;
 			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
 			DatagramPacket stop = new StopWork(false).toDatagramPacket();
@@ -137,10 +147,11 @@ public class Server extends Node {
 				result = "Name was found at line " + (((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
 			else
 				result = "Name not found.";
-			DatagramPacket clientPacket = new SendName(result).toDatagramPacket();
+			DatagramPacket clientPacket = new SendName(result + " This took approximately " + (int)timeTaken/1000000000 + " second(s).").toDatagramPacket();
 			clientPacket.setSocketAddress(dstAddress); //Should send the packet to Client
 			socket.send(clientPacket);
 			NextSection = 20;
+			terminal.println("hello");
 			this.notify();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -157,7 +168,7 @@ public class Server extends Node {
 				sent[1][heartbeats[i].getSection()] = false;
 			}
 		}
-		for(int i=0; i<sent.length; i++)
+		for(int i=0; i < sent[0].length; i++)
 		{
 			if(!sent[0][i])
 			{
@@ -181,7 +192,7 @@ public class Server extends Node {
 
 	public void organiseFile()
 	{
-		String fname= "names-short.txt";
+		String fname= "names.txt";
 
 		String line = " ";
 		long counter;
