@@ -63,7 +63,6 @@ public class Client extends Node {
 	 */
 	public synchronized void start() throws Exception 
 	{
-		
 		DatagramPacket packet= null;
 		String name; //read in from user input
 		SendName packetToSend;
@@ -74,13 +73,7 @@ public class Client extends Node {
 		socket.send(packet);
 		terminal.println("Sent: " + name);
 		this.wait();
-
-		
-		
 	}
-	
-
-
 	/**
 	 * Test method
 	 * 
