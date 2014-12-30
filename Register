@@ -8,15 +8,17 @@ public class Register extends PacketContent {
 	
 	boolean status;
 	int nodeID;
+	long timeTaken;
 	/**
 	 * 
 	 * @param status: contains info on whether or not the worker node is ready for work. True = it is, false it isnt
 
 	 */
-	Register(boolean status, int id) 
+	Register(boolean status, long timeTaken, int id) 
 	{
 		type= REGISTER;
 		this.status = status;
+		this.timeTaken = timeTaken;
 		nodeID = id;
 	}
 
@@ -30,6 +32,7 @@ public class Register extends PacketContent {
 			type= REGISTER;
 			status= oin.readBoolean();
 			nodeID = oin.readInt();
+			timeTaken = oin.readLong();
 		} 
 		catch(Exception e) {e.printStackTrace();}
 	}
@@ -42,6 +45,7 @@ public class Register extends PacketContent {
 		try {
 			oout.writeBoolean(status);
 			oout.writeInt(nodeID);
+			oout.writeLong(timeTaken);
 		}
 		catch(Exception e) {e.printStackTrace();}
 	}
@@ -69,5 +73,10 @@ public class Register extends PacketContent {
 	public int nodeNumber()
 	{
 		return nodeID;
+	}
+	
+	public long time()
+	{
+		return timeTaken;
 	}
 }
