@@ -73,13 +73,13 @@ public class WorkerNode extends Node {
 	 */
 	public void register()
 	{
-		DatagramPacket r = new Register(true, workerID).toDatagramPacket();
-		r.setSocketAddress(dstAddress);
-		try {
-			socket.send(r);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		DatagramPacket r = new Register(true, workerID).toDatagramPacket();
+//		r.setSocketAddress(dstAddress);
+//		try {
+//			socket.send(r);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		heartbeat = new Timer();
 		heartbeat.schedule(new TimerTask()
 		{
@@ -102,7 +102,7 @@ public class WorkerNode extends Node {
 		@Override
 		public void run()
 		{
-			DatagramPacket r = new Register(true, workerID).toDatagramPacket();
+			DatagramPacket r = new Register(true, System.nanoTime() - startTime, workerID).toDatagramPacket();
 			r.setSocketAddress(dstAddress);
 			try {
 				socket.send(r);
@@ -110,7 +110,7 @@ public class WorkerNode extends Node {
 				e.printStackTrace();
 			}
 		}
-		}, 1000, 1000);
+		}, 0, 1000);
 	}
 
 	public synchronized void start() throws Exception 
@@ -126,7 +126,7 @@ public class WorkerNode extends Node {
 			{
 				if(list[i].equals(search))
 				{
-					DatagramPacket result = new ResultPacket(i, System.nanoTime()-startTime, list.length, workerID).toDatagramPacket();
+					DatagramPacket result = new ResultPacket(i, list.length, workerID).toDatagramPacket();
 					result.setSocketAddress(dstAddress);
 					socket.send(result);
 					System.out.println("hi");
@@ -147,8 +147,9 @@ public class WorkerNode extends Node {
 	
 	public static void main(String[] args) {
 		try {
-			int intID;
-			WorkerNode Worker = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT, 0);
+			String id = JOptionPane.showInputDialog(null, "Please enter worker ID:");
+			int intID = Integer.parseInt(id);
+			WorkerNode Worker = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT, intID);
 			Worker.start();
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
