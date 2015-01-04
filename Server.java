@@ -144,7 +144,7 @@ public class Server extends Node {
 			}
 			String result;
 			if(recieved.getType() == PacketContent.RESULTPACKET)
-				result = "Name was found at line " + (((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
+				result = "Name was found at line " + (1 + ((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
 			else
 				result = "Name not found.";
 			DatagramPacket clientPacket = new SendName(result + " This took approximately " + (int)timeTaken/1000000000 + " second(s).").toDatagramPacket();
