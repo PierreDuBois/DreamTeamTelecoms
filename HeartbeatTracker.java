@@ -20,7 +20,7 @@ public class HeartbeatTracker{
 		this.section = section;
 	}
 	
-	public void clearTimer()
+	private void clearTimer()
 	{
 		timer.cancel();
 		timer.purge();
@@ -29,12 +29,13 @@ public class HeartbeatTracker{
 	public void resetTimer()
 	{
 		clearTimer();
-		timer = new Timer();
 	}
 	
 	public void timerTask()
 	{
+		timer = new Timer();
 		timer.schedule(new TimerTask(){
+			@Override
 			public void run()
 			{
 				server.Running[node] = false;
