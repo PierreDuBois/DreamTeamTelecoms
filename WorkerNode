@@ -73,13 +73,6 @@ public class WorkerNode extends Node {
 	 */
 	public void register()
 	{
-//		DatagramPacket r = new Register(true, workerID).toDatagramPacket();
-//		r.setSocketAddress(dstAddress);
-//		try {
-//			socket.send(r);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 		heartbeat = new Timer();
 		heartbeat.schedule(new TimerTask()
 		{
@@ -116,6 +109,8 @@ public class WorkerNode extends Node {
 	public synchronized void start() throws Exception 
 	{
 		register();
+		sectionsProcessed = -1;
+		entriesProcessed = -1;
 		list = new String[1];
 		list[0] = "0";
 		while(running)
@@ -142,6 +137,10 @@ public class WorkerNode extends Node {
 			register();
 			this.wait();
 		}
+		heartbeat.cancel();
+		heartbeat.purge();
+		registration.cancel();
+		registration.purge();
 	}
 	
 	
@@ -149,7 +148,7 @@ public class WorkerNode extends Node {
 		try {
 			String id = JOptionPane.showInputDialog(null, "Please enter worker ID:");
 			int intID = Integer.parseInt(id);
-			WorkerNode Worker = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT, intID);
+			WorkerNode Worker = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT+intID, intID);
 			Worker.start();
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
