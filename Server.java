@@ -21,14 +21,15 @@ public class Server extends Node {
 	static final int DEFAULT_DST_PORT = 50001;
 	static final int HEART_TIMEOUT = 3000;
 	static final String DEFAULT_DST_NODE = "localhost";
+	public static final int SECTIONS = 20;
 	public static final int DATABASE_SIZE = 10000;
-	public static final int DIVISION = (DATABASE_SIZE / 20);
+	public static final int DIVISION = (DATABASE_SIZE / SECTIONS);
 	Terminal terminal;
 	boolean startWork = false;
 	String currentSearch;// The name currrently beign searched for.
 	boolean ItemFound;		//Boolean marking whether or not the searchitem was found
 	String[][] FileContents; // Array of the array of strings to send to the nodes
-	boolean[][] sent = new boolean[2][20];
+	boolean[][] sent = new boolean[2][SECTIONS];
 	InetSocketAddress dstAddress =  new InetSocketAddress(DEFAULT_DST_NODE, DEFAULT_SRC_PORT);
 	boolean [] Running = new boolean[5];//Array of booleans that are set to True and are set to FAlse
 	//whenever a hearbeat returns saying a node is not running, or a heartbeat fails to be sent
@@ -76,7 +77,6 @@ public class Server extends Node {
 				int index = ((Heartbeat)recieved).index();
 				Stats[node][0] = Stats[node][0]  + index;
 				Stats[node][1] = ((Heartbeat)recieved).sectionsprocessed;
-				heartbeats[node].clearTimer();
 				heartbeats[node].resetTimer();
 				heartbeats[node].timerTask();
 				terminal.println("Node " + node + " has processed " + ((Heartbeat)recieved).sections() + " sections, and is on line " + 
@@ -87,15 +87,11 @@ public class Server extends Node {
 				int node = ((Register)recieved).nodeNumber();
 				//terminal.println("Worker " + node + " is ready to work!");
 				isMissing(packet, node);
-				if(NextSection < 20 && startWork)
+				if(NextSection < SECTIONS && startWork)
 				{
 					getNextSection();
 					timeTaken += ((Register)recieved).time();
 					sendWork(packet.getSocketAddress(), FileContents[NextSection]);
-					terminal.println("" + node);
-					heartbeats[node].clearTimer();
-					heartbeats[node].resetTimer();
-					heartbeats[node].timerTask();
 					sent[1][heartbeats[node].getSection()] = true;
 					heartbeats[node].setSection(NextSection);
 				}
@@ -119,10 +115,8 @@ public class Server extends Node {
 			if(sent[0][i] && sent[1][i])
 				count++;
 		}
-		terminal.println("" + count);
 		if(count == sent[0].length)
 		{
-			terminal.print("hi");
 			endWork(packet, nodeNumber);
 		}
 	}
@@ -130,7 +124,6 @@ public class Server extends Node {
 	public void endWork(DatagramPacket packet, int nodeNumber)
 	{
 		try {
-			System.out.println("yo");
 			startWork = false;
 			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
 			DatagramPacket stop = new StopWork(false).toDatagramPacket();
@@ -144,14 +137,13 @@ public class Server extends Node {
 			}
 			String result;
 			if(recieved.getType() == PacketContent.RESULTPACKET)
-				result = "Name was found at line " + (1 + ((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
+				result = "Name was found at line " + (((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
 			else
 				result = "Name not found.";
 			DatagramPacket clientPacket = new SendName(result + " This took approximately " + (int)timeTaken/1000000000 + " second(s).").toDatagramPacket();
 			clientPacket.setSocketAddress(dstAddress); //Should send the packet to Client
 			socket.send(clientPacket);
-			NextSection = 20;
-			terminal.println("hello");
+			NextSection = SECTIONS;
 			this.notify();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -192,8 +184,7 @@ public class Server extends Node {
 
 	public void organiseFile()
 	{
-		String fname= "names.txt";
-
+		String fname= "names-short.txt";
 		String line = " ";
 		long counter;
 		File file;
@@ -204,11 +195,11 @@ public class Server extends Node {
 			file= new File(fname);
 			fin= new FileInputStream(file);
 			in= new BufferedReader(new InputStreamReader(fin));
-			FileContents = new String[20][DIVISION];
+			FileContents = new String[SECTIONS][DIVISION];
 			counter= 0;
 			int array = 0;
 			Stats = new int[5][2];
-			while(line != null && array < 20)
+			while(line != null && array < SECTIONS)
 			{
 				int index = 0;
 				counter=0;
@@ -225,8 +216,8 @@ public class Server extends Node {
 			fin.close();
 		}
 		catch(Exception e) {e.printStackTrace();}
-
 	}
+	
 	public void sendWork(SocketAddress current, String[] Section) throws IOException
 	{
 		WorkerPacket Search = new WorkerPacket(Section,currentSearch);
