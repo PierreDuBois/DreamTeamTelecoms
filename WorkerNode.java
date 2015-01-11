@@ -47,8 +47,8 @@ public class WorkerNode extends Node {
 			{
 				list = ((WorkerPacket)content).getData();
 				search = ((WorkerPacket)content).toString();
-				heartbeat.cancel();
-				heartbeat.purge();
+				// heartbeat.cancel();
+				// heartbeat.purge();
 				registration.cancel();
 				registration.purge();
 			}
