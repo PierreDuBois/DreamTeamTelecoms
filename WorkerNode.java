@@ -135,7 +135,8 @@ public class WorkerNode extends Node {
 			registration.cancel();
 			registration.purge();
 			register();
-			this.wait();
+			if(running)
+				this.wait();
 		}
 		heartbeat.cancel();
 		heartbeat.purge();
