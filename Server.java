@@ -24,6 +24,7 @@ public class Server extends Node {
 	public static final int SECTIONS = 100000;
 	public static final int DATABASE_SIZE = 100000000;
 	public static final int DIVISION = (DATABASE_SIZE / SECTIONS);
+	public static final int WORKER_NUM = 10;
 	Terminal terminal;
 	boolean startWork = false;
 	String currentSearch;// The name currrently beign searched for.
@@ -31,17 +32,17 @@ public class Server extends Node {
 	String[][] FileContents; // Array of the array of strings to send to the nodes
 	boolean[][] sent = new boolean[2][SECTIONS];
 	InetSocketAddress dstAddress =  new InetSocketAddress(DEFAULT_DST_NODE, DEFAULT_SRC_PORT);
-	boolean [] Running = new boolean[5];//Array of booleans that are set to True and are set to FAlse
+	boolean [] Running = new boolean[WORKER_NUM];//Array of booleans that are set to True and are set to FAlse
 	//whenever a hearbeat returns saying a node is not running, or a heartbeat fails to be sent
 	//Twice in a row.
-	HeartbeatTracker[] heartbeats = new HeartbeatTracker[10];
+	HeartbeatTracker[] heartbeats = new HeartbeatTracker[WORKER_NUM];
 	int[][] Stats; //2D array of ints representing information on the Nodes the Server is keeping track of.
 	// Each element in the row represents a node and  the two columns represent the number of 
 	//names searched through and the sections of the code processed e.g. Stats[5][0] stores the 
 	// number of names searched through for Node 5, with Stat[5][1] being the sections.
 	int nextSection;
 	long timeTaken;
-	DatagramPacket address[] = new DatagramPacket[5];
+	DatagramPacket address[] = new DatagramPacket[WORKER_NUM];
 	/*
 	 * 
 	 */
@@ -127,7 +128,7 @@ public class Server extends Node {
 			startWork = false;
 			PacketContent received = PacketContent.fromDatagramPacket(packet);
 			DatagramPacket stop = new StopWork(false).toDatagramPacket();
-			for(int i = 0; i < 5; i ++)
+			for(int i = 0; i < address.length; i ++)
 			{
 				if(address[i] != null)
 				{
@@ -175,7 +176,7 @@ public class Server extends Node {
 
 	public synchronized void start() throws Exception 
 	{
-		for(int i = 0; i < 5; i++)
+		for(int i = 0; i < heartbeats.length; i++)
 			heartbeats[i] = new HeartbeatTracker(this, i, HEART_TIMEOUT, 19);
 		organiseFile();
 		terminal.println("Waiting for contact");
@@ -198,7 +199,7 @@ public class Server extends Node {
 			FileContents = new String[SECTIONS][DIVISION];
 			counter= 0;
 			int array = 0;
-			Stats = new int[5][2];
+			Stats = new int[WORKER_NUM][2];
 			while(line != null && array < SECTIONS)
 			{
 				int index = 0;
