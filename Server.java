@@ -39,7 +39,7 @@ public class Server extends Node {
 	// Each element in the row represents a node and  the two columns represent the number of 
 	//names searched through and the sections of the code processed e.g. Stats[5][0] stores the 
 	// number of names searched through for Node 5, with Stat[5][1] being the sections.
-	int NextSection;
+	int nextSection;
 	long timeTaken;
 	DatagramPacket address[] = new DatagramPacket[5];
 	/*
@@ -63,44 +63,44 @@ public class Server extends Node {
 	public synchronized void onReceipt(DatagramPacket packet)
 	{
 		try {
-			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
-			if(recieved.type == PacketContent.CLIENTNAME )
+			PacketContent received = PacketContent.fromDatagramPacket(packet);
+			if(received.type == PacketContent.CLIENTNAME )
 			{
-				SendName contents = ((SendName)recieved);
+				SendName contents = ((SendName)received);
 				currentSearch = contents.information;
 				startWork = true;
 			}
-			else if(recieved.type == PacketContent.HEARTBEAT)
+			else if(received.type == PacketContent.HEARTBEAT)
 			{
-				int node = ((Heartbeat)recieved).number();
+				int node = ((Heartbeat)received).number();
 				Running[node] = true;
-				int index = ((Heartbeat)recieved).index();
+				int index = ((Heartbeat)received).index();
 				Stats[node][0] = Stats[node][0]  + index;
-				Stats[node][1] = ((Heartbeat)recieved).sectionsprocessed;
+				Stats[node][1] = ((Heartbeat)received).sectionsprocessed;
 				heartbeats[node].resetTimer();
 				heartbeats[node].timerTask();
-				terminal.println("Node " + node + " has processed " + ((Heartbeat)recieved).sections() + " sections, and is on line " + 
-								((Heartbeat)recieved).index() + " of it's current section.");
+				terminal.println("Node " + node + " has processed " + ((Heartbeat)received).sections() + " sections, and is on line " + 
+								((Heartbeat)received).index() + " of it's current section.");
 			}
-			else if(recieved.type == PacketContent.REGISTER)
+			else if(received.type == PacketContent.REGISTER)
 			{
-				int node = ((Register)recieved).nodeNumber();
+				int node = ((Register)received).nodeNumber();
 				//terminal.println("Worker " + node + " is ready to work!");
 				isMissing(packet, node);
-				if(NextSection < SECTIONS && startWork)
+				if(nextSection < SECTIONS && startWork)
 				{
 					getNextSection();
-					timeTaken += ((Register)recieved).time();
-					sendWork(packet.getSocketAddress(), FileContents[NextSection]);
+					timeTaken += ((Register)received).time();
+					sendWork(packet.getSocketAddress(), FileContents[nextSection]);
 					sent[1][heartbeats[node].getSection()] = true;
-					heartbeats[node].setSection(NextSection);
+					heartbeats[node].setSection(nextSection);
 				}
 				Running[node] = true;
 				address[node] = packet;
 			}
-			else if(recieved.type == PacketContent.RESULTPACKET)
+			else if(received.type == PacketContent.RESULTPACKET)
 			{
-				int node = ((ResultPacket)recieved).getID();
+				int node = ((ResultPacket)received).getID();
 				endWork(packet, node);
 			}
 		}
@@ -125,7 +125,7 @@ public class Server extends Node {
 	{
 		try {
 			startWork = false;
-			PacketContent recieved = PacketContent.fromDatagramPacket(packet);
+			PacketContent received = PacketContent.fromDatagramPacket(packet);
 			DatagramPacket stop = new StopWork(false).toDatagramPacket();
 			for(int i = 0; i < 5; i ++)
 			{
@@ -136,14 +136,14 @@ public class Server extends Node {
 				}
 			}
 			String result;
-			if(recieved.getType() == PacketContent.RESULTPACKET)
-				result = "Name was found at line " + (((ResultPacket)recieved).getLineNumber() + (heartbeats[((ResultPacket)recieved).getID()].getSection() * DIVISION)) + ".";
+			if(received.getType() == PacketContent.RESULTPACKET)
+				result = "Name was found at line " + (((ResultPacket)received).getLineNumber() + (heartbeats[((ResultPacket)received).getID()].getSection() * DIVISION)) + ".";
 			else
 				result = "Name not found.";
 			DatagramPacket clientPacket = new SendName(result + " This took approximately " + (int)timeTaken/1000000000 + " second(s).").toDatagramPacket();
 			clientPacket.setSocketAddress(dstAddress); //Should send the packet to Client
 			socket.send(clientPacket);
-			NextSection = SECTIONS;
+			nextSection = SECTIONS;
 			this.notify();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -164,7 +164,7 @@ public class Server extends Node {
 		{
 			if(!sent[0][i])
 			{
-				NextSection = i;
+				nextSection = i;
 				sent[0][i] = true;
 				return;
 			}
