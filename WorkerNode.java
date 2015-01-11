@@ -147,7 +147,7 @@ public class WorkerNode extends Node {
 	
 	public static void main(String[] args) {
 		try {
-			String id = JOptionPane.showInputDialog(null, "Please enter worker ID:");
+			String id = JOptionPane.showInputDialog(null, "Please enter worker ID between 0 and 9 (inclusive):");
 			int intID = Integer.parseInt(id);
 			WorkerNode Worker = new WorkerNode(DEFAULT_DST_NODE, DST_PORT,  SRC_PORT+intID, intID);
 			Worker.start();
