@@ -21,8 +21,8 @@ public class Server extends Node {
 	static final int DEFAULT_DST_PORT = 50001;
 	static final int HEART_TIMEOUT = 3000;
 	static final String DEFAULT_DST_NODE = "localhost";
-	public static final int SECTIONS = 20;
-	public static final int DATABASE_SIZE = 10000;
+	public static final int SECTIONS = 100000;
+	public static final int DATABASE_SIZE = 100000000;
 	public static final int DIVISION = (DATABASE_SIZE / SECTIONS);
 	Terminal terminal;
 	boolean startWork = false;
